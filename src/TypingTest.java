@@ -24,7 +24,7 @@ public class TypingTest extends JFrame {
     }
 
     private void setupFrame() {
-        setTitle("MonkeyType Clone");
+        setTitle("Typing Speed Test");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 500);
         setLocationRelativeTo(null);
