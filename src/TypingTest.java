@@ -161,6 +161,7 @@ public class TypingTest extends JFrame {
                 SwingUtilities.invokeLater(() -> {
                     timeLeft--;
                     timerLabel.setText("Time: " + timeLeft + "s");
+                    statsManager.setStartTime(timeLeft);
                     if (timeLeft <= 0) {
                         endTest();
                     }

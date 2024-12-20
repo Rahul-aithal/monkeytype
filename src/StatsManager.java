@@ -38,6 +38,11 @@ public class StatsManager {
         return totalWords == 0 ? 100 : (correctWords * 100) / totalWords;
     }
 
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+    
+
     public int getWordsTyped() {
         return totalWords;
     }
