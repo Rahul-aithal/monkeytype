@@ -2,7 +2,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -13,41 +12,49 @@ public class TypingTest extends JFrame {
     private StatsManager statsManager;
     private RandomWordGenerator wordGenerator;
     private Timer timer;
-    private int timeLeft = 60; // 60 seconds for the test
+    private int timeLeft = 60;
     private boolean testRunning = false;
 
     public TypingTest() {
+        setupFrame();
+        initializeComponents();
+        createLayout();
+        setupMenuBar();
+        restartTest();
+    }
+
+    private void setupFrame() {
         setTitle("MonkeyType Clone");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 500);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        setResizable(false);
+        setResizable(true);
+    }
 
-        // Initialize components
+    private void initializeComponents() {
         statsManager = new StatsManager();
         wordGenerator = new RandomWordGenerator();
         String initialWords = wordGenerator.generateWords(50);
         statsManager.processInput("", initialWords);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.decode("#121212"));
-        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        setupWordDisplay();
+        setupInputField();
+    }
 
-        // Word display
+    private void setupWordDisplay() {
         wordDisplay = new JTextPane();
-        wordDisplay.setText(initialWords);
+        wordDisplay.setContentType("text/html");
+        wordDisplay.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
         wordDisplay.setEditable(false);
         wordDisplay.setFont(new Font("Consolas", Font.PLAIN, 20));
         wordDisplay.setBackground(Color.decode("#121212"));
-        wordDisplay.setForeground(Color.decode("#e0e0e0"));
         wordDisplay.setBorder(BorderFactory.createLineBorder(Color.decode("#2c2c2c")));
         wordDisplay.setFocusable(false);
         wordDisplay.setMargin(new Insets(10, 10, 10, 10));
-        JScrollPane scrollPane = new JScrollPane(wordDisplay);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
+    }
 
-        // Input field
+    private void setupInputField() {
         inputField = new JTextField();
         inputField.setFont(new Font("Consolas", Font.PLAIN, 20));
         inputField.setBackground(Color.decode("#1e1e1e"));
@@ -60,19 +67,41 @@ public class TypingTest extends JFrame {
                 if (!testRunning) {
                     startTest();
                 }
-
-                // Process input on SPACE or ENTER
-                if (e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if ((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_ENTER)
+                        && !inputField.getText().trim().isEmpty()) {
                     String userInput = inputField.getText().trim();
                     statsManager.processInput(userInput, wordGenerator.getWords());
-                    inputField.setText(""); // Clear input
+                    inputField.setText("");
                     updateWordHighlight();
                     updateStats();
                 }
             }
         });
+    }
 
-        // Reset Button
+    private void createLayout() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.decode("#121212"));
+        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        JScrollPane scrollPane = new JScrollPane(wordDisplay);
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.decode("#2c2c2c")));
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel bottomPanel = createBottomPanel();
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        JPanel statsPanel = createStatsPanel();
+        mainPanel.add(statsPanel, BorderLayout.NORTH);
+
+        add(mainPanel);
+    }
+
+    private JPanel createBottomPanel() {
+        JPanel bottomPanel = new JPanel(new BorderLayout(10, 0));
+        bottomPanel.setBackground(Color.decode("#121212"));
+        bottomPanel.setBorder(new EmptyBorder(10, 0, 0, 0));
+
         JButton resetButton = new JButton("Reset");
         resetButton.setBackground(Color.decode("#2c2c2c"));
         resetButton.setForeground(Color.decode("#e0e0e0"));
@@ -81,13 +110,12 @@ public class TypingTest extends JFrame {
         resetButton.setBorder(BorderFactory.createLineBorder(Color.decode("#2c2c2c")));
         resetButton.addActionListener(e -> restartTest());
 
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBackground(Color.decode("#121212"));
         bottomPanel.add(inputField, BorderLayout.CENTER);
         bottomPanel.add(resetButton, BorderLayout.EAST);
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+        return bottomPanel;
+    }
 
-        // Stats and timer panel
+    private JPanel createStatsPanel() {
         JPanel statsPanel = new JPanel(new GridLayout(1, 3));
         statsPanel.setBackground(Color.decode("#121212"));
 
@@ -106,14 +134,13 @@ public class TypingTest extends JFrame {
         accuracyLabel.setFont(new Font("Consolas", Font.BOLD, 18));
         statsPanel.add(accuracyLabel);
 
-        mainPanel.add(statsPanel, BorderLayout.NORTH);
+        return statsPanel;
+    }
 
-        // Add main panel
-        add(mainPanel);
-
-        // Menu bar for restart
+    private void setupMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(Color.decode("#1e1e1e"));
+
         JMenu optionsMenu = new JMenu("Options");
         optionsMenu.setForeground(Color.decode("#e0e0e0"));
 
@@ -123,8 +150,6 @@ public class TypingTest extends JFrame {
 
         menuBar.add(optionsMenu);
         setJMenuBar(menuBar);
-
-        restartTest();
     }
 
     private void startTest() {
@@ -133,11 +158,13 @@ public class TypingTest extends JFrame {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                timeLeft--;
-                timerLabel.setText("Time: " + timeLeft + "s");
-                if (timeLeft <= 0) {
-                    endTest();
-                }
+                SwingUtilities.invokeLater(() -> {
+                    timeLeft--;
+                    timerLabel.setText("Time: " + timeLeft + "s");
+                    if (timeLeft <= 0) {
+                        endTest();
+                    }
+                });
             }
         }, 1000, 1000);
     }
@@ -156,7 +183,6 @@ public class TypingTest extends JFrame {
                 "<p><strong>Accuracy:</strong> " + statsManager.getAccuracy() + "%</p>" +
                 "<p><strong>Total Words:</strong> " + statsManager.getWordsTyped() + "</p>" +
                 "</center></html>";
-
         JOptionPane.showMessageDialog(this, results, "Results", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -169,7 +195,7 @@ public class TypingTest extends JFrame {
         statsManager.resetStats();
         String generatedWords = wordGenerator.generateWords(50);
         statsManager.processInput("", generatedWords);
-        wordDisplay.setText(statsManager.getHighlightedWords());
+        updateWordHighlight();
         updateStats();
     }
 
@@ -179,7 +205,8 @@ public class TypingTest extends JFrame {
     }
 
     private void updateWordHighlight() {
-        wordDisplay.setText(statsManager.getHighlightedWords());
+        String highlightedText = statsManager.getHighlightedWords();
+        wordDisplay.setText("<html><body style='font-family: Consolas; font-size: 20pt; background-color: #121212; color: #e0e0e0;'>" + highlightedText + "</body></html>");
     }
 
     public static void main(String[] args) {
