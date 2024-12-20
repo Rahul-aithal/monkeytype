@@ -21,10 +21,63 @@ public class TypingTest extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 500);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(new CardLayout());
         setResizable(false);
 
-        // Initialize components
+        JPanel menuPanel = createMenuPanel();
+        JPanel testPanel = createTestPanel();
+
+        // Add panels to the CardLayout
+        getContentPane().add(menuPanel, "Menu");
+        getContentPane().add(testPanel, "Test");
+
+        // Start with the menu panel
+        CardLayout cardLayout = (CardLayout) getContentPane().getLayout();
+        cardLayout.show(getContentPane(), "Menu");
+    }
+
+    private JPanel createMenuPanel() {
+        JPanel menuPanel = new JPanel(new GridBagLayout());
+        menuPanel.setBackground(Color.decode("#121212"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel titleLabel = new JLabel("Typing Speed Test", JLabel.CENTER);
+        titleLabel.setFont(new Font("Consolas", Font.BOLD, 32));
+        titleLabel.setForeground(Color.decode("#e0e0e0"));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        menuPanel.add(titleLabel, gbc);
+
+        JButton startButton = new JButton("Start Test");
+        styleButton(startButton);
+        startButton.addActionListener(e -> {
+            CardLayout cardLayout = (CardLayout) getContentPane().getLayout();
+            cardLayout.show(getContentPane(), "Test");
+            restartTest();
+        });
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        menuPanel.add(startButton, gbc);
+
+        JButton instructionsButton = new JButton("Instructions");
+        styleButton(instructionsButton);
+        instructionsButton.addActionListener(e -> showInstructions());
+        gbc.gridy = 2;
+        menuPanel.add(instructionsButton, gbc);
+
+        JButton exitButton = new JButton("Exit");
+        styleButton(exitButton);
+        exitButton.addActionListener(e -> System.exit(0));
+        gbc.gridy = 3;
+        menuPanel.add(exitButton, gbc);
+
+        return menuPanel;
+    }
+
+    private JPanel createTestPanel() {
         statsManager = new StatsManager();
         wordGenerator = new RandomWordGenerator();
         String initialWords = wordGenerator.generateWords(50);
@@ -108,23 +161,24 @@ public class TypingTest extends JFrame {
 
         mainPanel.add(statsPanel, BorderLayout.NORTH);
 
-        // Add main panel
-        add(mainPanel);
+        return mainPanel;
+    }
 
-        // Menu bar for restart
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.setBackground(Color.decode("#1e1e1e"));
-        JMenu optionsMenu = new JMenu("Options");
-        optionsMenu.setForeground(Color.decode("#e0e0e0"));
+    private void styleButton(JButton button) {
+        button.setBackground(Color.decode("#2c2c2c"));
+        button.setForeground(Color.decode("#e0e0e0"));
+        button.setFont(new Font("Consolas", Font.BOLD, 16));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createLineBorder(Color.decode("#2c2c2c")));
+    }
 
-        JMenuItem restartItem = new JMenuItem("Restart");
-        restartItem.addActionListener(e -> restartTest());
-        optionsMenu.add(restartItem);
-
-        menuBar.add(optionsMenu);
-        setJMenuBar(menuBar);
-
-        restartTest();
+    private void showInstructions() {
+        String instructions = "<html><center><h2>Instructions</h2>"
+                + "<p>1. Type the words displayed as fast as you can.</p>"
+                + "<p>2. Press SPACE or ENTER after each word.</p>"
+                + "<p>3. Your WPM and accuracy will be calculated.</p>"
+                + "<p>4. The test lasts 60 seconds.</p></center></html>";
+        JOptionPane.showMessageDialog(this, instructions, "Instructions", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void startTest() {
